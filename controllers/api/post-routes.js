@@ -13,7 +13,6 @@ Post.findAll({
     'created_at',
     [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
     ],
-    order: [['created_at', 'DESC']],
     include: [
     {
         model: Comment,
@@ -26,7 +25,7 @@ Post.findAll({
     {
         model: User,
         attributes: ['username']
-    }
+        }
     ]
 })
     .then(dbPostData => res.json(dbPostData))
@@ -92,7 +91,7 @@ Post.create({
 
 router.put('/upvote', (req, res) => {
 // custom static method created in models/Post.js
-Post.upvote(req.body, { Vote, Comment, User })
+Post.upvote({...req.body,user_id: req.session.user_id}, { Vote, Comment, User })
     .then(updatedVoteData => res.json(updatedVoteData))
     .catch(err => {
     console.log(err);
@@ -125,21 +124,22 @@ Post.update(
 });
 
 router.delete('/:id', (req, res) => {
-Post.destroy({
-    where: {
-    id: req.params.id
-    }
-})
-    .then(dbPostData => {
-    if (!dbPostData) {
-        res.status(404).json({ message: 'No post found with this id' });
-        return;
-    }
-    res.json(dbPostData);
+    console.log('id', req.params.id);
+    Post.destroy({
+        where: {
+        id: req.params.id
+        }
     })
-    .catch(err => {
-    console.log(err);
-    res.status(500).json(err);
+        .then(dbPostData => {
+        if (!dbPostData) {
+            res.status(404).json({ message: 'No post found with this id' });
+            return;
+        }
+        res.json(dbPostData);
+        })
+        .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
     });
 });
 
