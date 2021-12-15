@@ -12,6 +12,7 @@ router.get('/', (req, res) => {
 
 router.post('/', (req, res) => {
   // expects => {comment_text: "This is the comment", user_id: 1, post_id: 2}
+  if (req.session) {
     Comment.create({
         comment_text: req.body.comment_text,
         user_id: req.body.user_id,
@@ -22,25 +23,28 @@ router.post('/', (req, res) => {
         console.log(err);
         res.status(400).json(err);
         });
+      }
     });
 
     router.delete('/:id', (req, res) => {
-    Comment.destroy({
-        where: {
-        id: req.params.id
-        }
-    })
-        .then(dbCommentData => {
-        if (!dbCommentData) {
-            res.status(404).json({ message: 'No comment found with this id!' });
-            return;
-        }
-        res.json(dbCommentData);
+      if (req.session) {
+        Comment.destroy({
+          where: {
+            id: req.params.id
+          }
         })
-        .catch(err => {
-        console.log(err);
-        res.status(500).json(err);
-        });
+          .then(dbCommentData => {
+            if (!dbCommentData) {
+              res.status(404).json({ message: 'No comment found with this id!' });
+              return;
+            }
+            res.json(dbCommentData);
+          })
+          .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+          });
+      }
 });
 
 module.exports = router;
